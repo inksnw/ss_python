@@ -5,6 +5,55 @@ import select
 import time
 import errno
 import traceback
+import utils
+from collections import defaultdict
+# we check timeouts every TIMEOUT_PRECISION seconds
+TIMEOUT_PRECISION = 10
+
+
+POLL_NULL = 0x00
+POLL_IN = 0x01
+POLL_OUT = 0x04
+POLL_ERR = 0x08
+POLL_HUP = 0x10
+POLL_NVAL = 0x20
+
+
+class SelectLoop(object):
+    """docstring for SelectLoop"""
+
+    def __init__(self):
+        self._r_list = set()
+        self._w_list = set()
+        self._x_list = set()
+
+    def poll(self, timeout):
+        r, w, x = select.select(self._r_list, self._w_list, self._x_list, timeout)
+        results = defaultdict(lambda: POLL_NULL)
+        for p in [(r, POLL_IN), (w, POLL_OUT), (x, POLL_ERR)]:
+            for fd in p[0]:
+                results[fd] |= p[1]
+        return results.items()
+
+    def register(self, fd, mode):
+        if mode & POLL_IN:
+            self._r_list.add(fd)
+        if mode & POLL_OUT:
+            self._w_list.add(fd)
+        if mode & POLL_ERR:
+            self._x_list.add(fd)
+
+    def unregister(self, fd):
+        if mode & POLL_IN:
+            self._r_list.remove(fd)
+        if mode & POLL_OUT:
+            self._w_list.remove(fd)
+        if mode & POLL_ERR:
+            self._x_list.remove(fd)
+
+    def modify(self, fd, mode):
+        self.unregister(fd)
+        self.register(fd, mode)
 
 
 class EventLoop(object):
@@ -58,7 +107,7 @@ class EventLoop(object):
         while not self._stopping:
             asap = False
             try:
-                events = self.poll()
+                events = self.poll(TIMEOUT_PRECISION)
             except (OSError, IOError) as e:
                 if errno_from_exception(e) in (errno.EPIPE, errno.EINTR):
                     # EPIPE: Happens when the client closes the connection
@@ -76,12 +125,20 @@ class EventLoop(object):
                     handler = handler[1]
                     try:
                         handler.handel_event(sock, fd, event)
+                    except (OSError, IOError) as e:
+                        utils.print_exception(e)
+            now = time.time()
+            if asap or now - self._last_time >= TIMEOUT_PRECISION:
+                for callback in self._periodic_callbacks:
+                    callback()
+                self._last_time = now
 
-                    except Exception as e:
-                        raise e
+    def __del__(self):
+        self._impl.close()
 
 
 # from tornado
+
 def errno_from_exception(e):
     """Provides the errno from an Exception object.
 
