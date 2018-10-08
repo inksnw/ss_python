@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import logging
+import json
 import traceback
 from common import to_bytes, to_str
 verbose = 0
@@ -76,7 +78,7 @@ def get_config():
         level = logging.INFO
     verbose = config['verbose']
     logging.basicConfig(level=level,
-                        format='%(asctime)s %(levelname)-8s %(message)s',
+                        format='%(asctime)s %(lineno)-4s %(levelname)-6s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     return config

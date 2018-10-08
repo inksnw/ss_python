@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import utils
+import os
+import sys
+import logging
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
+from shadowsocks import utils, tcprelay, eventloop
 
 
 def main():
     config = utils.get_config()
-    logging.info("starting local at %s:%d" % (config['local_address'], config['local_port']))
+    logging.info(f"starting local at {config['local_address']}:{config['local_port']}")
 
-    dns_resolver = asyncdns.DNSResolver()
-    tcp_server = tcprelay.TCPRelay(config, dns_resolver, True)
-    udp_server = udprelay.UDPRelay(config, dns_resolver, True)
+    tcp_server = tcprelay.TCPRelay(config, None, True)
     loop = eventloop.EventLoop()
-    dns_resolver.add_to_loop(loop)
     tcp_server.add_to_loop(loop)
-    udp_server.add_to_loop(loop)
-
     loop.run()
 
 

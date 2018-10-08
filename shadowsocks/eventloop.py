@@ -6,6 +6,7 @@ import time
 import errno
 import traceback
 import utils
+import logging
 from collections import defaultdict
 # we check timeouts every TIMEOUT_PRECISION seconds
 TIMEOUT_PRECISION = 10
@@ -17,6 +18,15 @@ POLL_OUT = 0x04
 POLL_ERR = 0x08
 POLL_HUP = 0x10
 POLL_NVAL = 0x20
+
+EVENT_NAMES = {
+    POLL_NULL: 'POLL_NULL',
+    POLL_IN: 'POLL_IN',
+    POLL_OUT: 'POLL_OUT',
+    POLL_ERR: 'POLL_ERR',
+    POLL_HUP: 'POLL_HUP',
+    POLL_NVAL: 'POLL_NVAL',
+}
 
 
 class SelectLoop(object):
@@ -55,11 +65,14 @@ class SelectLoop(object):
         self.unregister(fd)
         self.register(fd, mode)
 
+    def close(self):
+        pass
+
 
 class EventLoop(object):
     """docstring for EventLoop"""
 
-    def __init__(self, arg):
+    def __init__(self):
         if hasattr(select, 'epoll'):
             self._impl = select.epoll()
             model = 'epoll'
@@ -75,7 +88,7 @@ class EventLoop(object):
         logging.debug(f'using event model {model}')
 
     def poll(self, timeout=None):
-        enents = self._impl.poll(timeout)
+        events = self._impl.poll(timeout)
         return [(self._fdmap[fd][0], fd, event) for fd, event in events]
 
     def add(self, f, mode, handler):
@@ -124,7 +137,7 @@ class EventLoop(object):
                 if handler is not None:
                     handler = handler[1]
                     try:
-                        handler.handel_event(sock, fd, event)
+                        handler.handle_event(sock, fd, event)
                     except (OSError, IOError) as e:
                         utils.print_exception(e)
             now = time.time()
