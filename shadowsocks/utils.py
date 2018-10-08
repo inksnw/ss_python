@@ -63,6 +63,9 @@ def get_config():
     config['tunnel_remote'] = to_str(config.get('tunnel_remote', '8.8.8.8'))
     config['tunnel_remote_port'] = config.get('tunnel_remote_port', 53)
     config['tunnel_port'] = config.get('tunnel_port', 53)
+    config['crypto_path'] = {'openssl': config['libopenssl'],
+                             'mbedtls': config['libmbedtls'],
+                             'sodium': config['libsodium']}
 
     logging.getLogger('').handlers = []
     logging.addLevelName(VERBOSE_LEVEL, 'VERBOSE')
@@ -78,7 +81,7 @@ def get_config():
         level = logging.INFO
     verbose = config['verbose']
     logging.basicConfig(level=level,
-                        format='%(asctime)s %(lineno)-4s %(levelname)-6s %(message)s',
+                        format='%(asctime)s %(filename)s %(lineno)-4s %(levelname)-6s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     return config

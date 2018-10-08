@@ -54,11 +54,11 @@ class SelectLoop(object):
             self._x_list.add(fd)
 
     def unregister(self, fd):
-        if mode & POLL_IN:
+        if fd in self._r_list:
             self._r_list.remove(fd)
-        if mode & POLL_OUT:
+        if fd in self._w_list:
             self._w_list.remove(fd)
-        if mode & POLL_ERR:
+        if fd in self._x_list:
             self._x_list.remove(fd)
 
     def modify(self, fd, mode):
