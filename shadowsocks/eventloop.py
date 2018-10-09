@@ -7,6 +7,8 @@ import errno
 import traceback
 import utils
 import logging
+import socket
+import os
 from collections import defaultdict
 # we check timeouts every TIMEOUT_PRECISION seconds
 TIMEOUT_PRECISION = 10
@@ -168,3 +170,9 @@ def errno_from_exception(e):
         return e.args[0]
     else:
         return None
+# from tornado
+
+
+def get_sock_error(sock):
+    error_number = sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+    return socket.error(error_number, os.strerror(error_number))

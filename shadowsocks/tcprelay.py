@@ -128,8 +128,7 @@ class TCPRelayHandler(object):
         fd_to_handler[local_sock.fileno()] = self
         local_sock.setblocking(False)
         local_sock.setsockopt(socket.SOL_TCP, socket.TCP_NODELAY, 1)
-        loop.add(local_sock, eventloop.POLL_IN | eventloop.POLL_ERR,
-                 self._server)
+        loop.add(local_sock, eventloop.POLL_IN | eventloop.POLL_ERR, self._server)
         self.last_activity = 0
         self._update_activity()
 
@@ -769,7 +768,7 @@ class TCPRelay(object):
             while pos < length:
                 handler = self._timeouts[pos]
                 if handler:
-                    if now - handler.last_activity < self._timeouts:
+                    if now - handler.last_activity < self._timeout:
                         break
                     else:
                         if handler.remote_address:
