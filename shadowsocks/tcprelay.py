@@ -204,8 +204,7 @@ class TCPRelayHandler(object):
 
         except (OSError, IOError) as e:
             error_no = eventloop.errno_from_exception(e)
-            if error_no in (errno.EAGAIN, errno.EINPROGRESS,
-                            errno.EWOULDBLOCK):
+            if error_no in (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK):
                 uncomplete = True
             else:
                 shell.print_exception(e)
@@ -283,6 +282,12 @@ class TCPRelayHandler(object):
                 tunnel_remote_port = self.tunnel_remote_port
                 data = common.add_header(tunnel_remote, tunnel_remote_port, data)
             else:
+                '''
+                CMD：代表客户端请求的类型，值长度也是1个字节，有三种类型；
+                CONNECT： 0x01；
+                BIND： 0x02；
+                UDP： ASSOCIATE 0x03；
+                '''
                 cmd = common.ord(data[1])
                 if cmd == CMD_UDP_ASSOCIATE:
                     logging.debug("UDP associate")
@@ -352,18 +357,15 @@ class TCPRelayHandler(object):
             data_to_send = self._cryptor.encrypt(data)
             self._data_to_write_to_remote.append(data_to_send)
             # notice here may go into _handle_dns_resolved directly
-            self._dns_resolver.resolve(self._chosen_server[0],
-                                       self._handle_dns_resolved)
+            self._dns_resolver.resolve(self._chosen_server[0], self._handle_dns_resolved)
         else:
             if self._ota_enable_session:
                 data = data[header_length:]
-                self._ota_chunk_data(data,
-                                     self._data_to_write_to_remote.append)
+                self._ota_chunk_data(data, self._data_to_write_to_remote.append)
             elif len(data) > header_length:
                 self._data_to_write_to_remote.append(data[header_length:])
             # notice here may go into _handle_dns_resolved directly
-            self._dns_resolver.resolve(remote_addr,
-                                       self._handle_dns_resolved)
+            self._dns_resolver.resolve(remote_addr, self._handle_dns_resolved)
 
     def _create_remote_socket(self, ip, port):
         addrs = socket.getaddrinfo(ip, port, 0, socket.SOCK_STREAM,
@@ -408,13 +410,11 @@ class TCPRelayHandler(object):
             # TODO when there is already data in this packet
         else:
             # else do connect
-            remote_sock = self._create_remote_socket(remote_addr,
-                                                     remote_port)
+            remote_sock = self._create_remote_socket(remote_addr, remote_port)
             try:
                 remote_sock.connect((remote_addr, remote_port))
             except (OSError, IOError) as e:
-                if eventloop.errno_from_exception(e) == \
-                        errno.EINPROGRESS:
+                if eventloop.errno_from_exception(e) == errno.EINPROGRESS:
                     pass
             self._loop.add(remote_sock,
                            eventloop.POLL_ERR | eventloop.POLL_OUT,
@@ -489,8 +489,7 @@ class TCPRelayHandler(object):
         socks_version = common.ord(data[0])
         nmethods = common.ord(data[1])
         if socks_version != 5:
-            logging.warning('unsupported SOCKS protocol version ' +
-                            str(socks_version))
+            logging.warning('unsupported SOCKS protocol version ' + str(socks_version))
             raise BadSocksHeader
         if nmethods < 1 or len(data) != nmethods + 2:
             logging.warning('NMETHODS and number of METHODS mismatch')
@@ -533,8 +532,7 @@ class TCPRelayHandler(object):
         try:
             data = self._local_sock.recv(buf_size)
         except (OSError, IOError) as e:
-            if eventloop.errno_from_exception(e) in \
-                    (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK):
+            if eventloop.errno_from_exception(e) in (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK):
                 return
         if not data:
             self.destroy()
@@ -556,8 +554,7 @@ class TCPRelayHandler(object):
                 self._handle_stage_init(data)
         elif self._stage == STAGE_CONNECTING:
             self._handle_stage_connecting(data)
-        elif (is_local and self._stage == STAGE_ADDR) or \
-                (not is_local and self._stage == STAGE_INIT):
+        elif (is_local and self._stage == STAGE_ADDR) or (not is_local and self._stage == STAGE_INIT):
             self._handle_stage_addr(data)
 
     def _on_remote_read(self):
@@ -729,8 +726,7 @@ class TCPRelay(object):
         if self._closed:
             raise Exception('already closed')
         self._eventloop = loop
-        self._eventloop.add(self._server_socket,
-                            eventloop.POLL_IN | eventloop.POLL_ERR, self)
+        self._eventloop.add(self._server_socket, eventloop.POLL_IN | eventloop.POLL_ERR, self)
         self._eventloop.add_periodic(self.handle_periodic)
 
     def remove_handler(self, handler):
@@ -772,8 +768,7 @@ class TCPRelay(object):
                         break
                     else:
                         if handler.remote_address:
-                            logging.warn('timed out: %s:%d' %
-                                         handler.remote_address)
+                            logging.warn('timed out: %s:%d' % handler.remote_address)
                         else:
                             logging.warn('timed out')
                         handler.destroy()
@@ -806,8 +801,7 @@ class TCPRelay(object):
 
             except (OSError, IOError) as e:
                 error_no = eventloop.errno_from_exception(e)
-                if error_no in (errno.EAGAIN, errno.EINPROGRESS,
-                                errno.EWOULDBLOCK):
+                if error_no in (errno.EAGAIN, errno.EINPROGRESS, serrno.EWOULDBLOCK):
                     return
                 else:
                     utils.print_exception(e)
