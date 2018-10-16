@@ -1,5 +1,5 @@
 {
-    "server":"192.168.30.132",
+    "server":"0.0.0.0",
     "server_port":8388,
     "local_port":1081,
     "password":"password",

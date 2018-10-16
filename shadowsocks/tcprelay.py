@@ -568,8 +568,7 @@ class TCPRelayHandler(object):
             data = self._remote_sock.recv(buf_size)
 
         except (OSError, IOError) as e:
-            if eventloop.errno_from_exception(e) in \
-                    (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK):
+            if eventloop.errno_from_exception(e) in (errno.ETIMEDOUT, errno.EAGAIN, errno.EWOULDBLOCK):
                 return
         if not data:
             self.destroy()
@@ -706,7 +705,7 @@ class TCPRelay(object):
             listen_addr = config['local_address']
             listen_port = config['local_port']
         else:
-            listen_addr = config['server']
+            listen_addr = '0.0.0.0'
             listen_port = config['server_port']
         self._listen_port = listen_port
 
