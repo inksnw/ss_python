@@ -1,2 +1,2 @@
 # ss_python
-练手
+shadowsocks的python实现,重写练手
